@@ -1,34 +1,37 @@
-import pandas as pd
-from datetime import datetime
-from google.oauth2.service_account import Credentials
+# Set environment variables
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/aspir/Desktop/Divvy/acoustic-portal-322707-496a5c838490.json'
 
-# Construct a DataFrame
+def create_dataset(dataset_id, region_name):
+    """Create a dataset in Google BigQuery if it does not exist.
 
+    :param dataset_id: Name of dataset
+    :param region_name: Region name for data center, i.e. europe-west2 for London
+    :return: Create dataset
+    """
 
-def str_to_date(str):
-    return datetime.strptime(str, '%Y-%m-%d').date()
+    client = bigquery.Client()
+    reference = client.dataset(dataset_id)
 
+    try:
+        client.get_dataset(reference)
+    except NotFound:
+        dataset = bigquery.Dataset(reference)
+        dataset.location = region_name
 
-data = [{'DATE': str_to_date('2020-01-01'), 'TYPE': 'TypeA', 'SALES': 1000},
-        {'DATE': str_to_date('2020-01-01'), 'TYPE': 'TypeB', 'SALES': 200},
-        {'DATE': str_to_date('2020-01-01'), 'TYPE': 'TypeC', 'SALES': 300},
-        {'DATE': str_to_date('2020-02-01'), 'TYPE': 'TypeA', 'SALES': 700},
-        {'DATE': str_to_date('2020-02-01'), 'TYPE': 'TypeB', 'SALES': 400},
-        {'DATE': str_to_date('2020-02-01'), 'TYPE': 'TypeC', 'SALES': 500},
-        {'DATE': str_to_date('2020-03-01'), 'TYPE': 'TypeA', 'SALES': 300},
-        {'DATE': str_to_date('2020-03-01'), 'TYPE': 'TypeB', 'SALES': 900},
-        {'DATE': str_to_date('2020-03-01'), 'TYPE': 'TypeC', 'SALES': 100}
-        ]
-df = pd.DataFrame(data)
+        dataset = client.create_dataset(dataset)
 
-# Define target table in BQ
-target_table = "YOUR_DATA_SET.pandas"
-project_id = "YOUR_PROJECT_ID"
-credential_file = "PATH_TO_YOUR_SERVICE_ACCOUNT_CREDENTIAL_FILE.json"
-credential = Credentials.from_service_account_file(credential_file)
-# Location for BQ job, it needs to match with destination table location
-job_location = "australia-southeast1"
+create_dataset('bike_dataset','us-east1')
 
-# Save Pandas dataframe to BQ
-df.to_gbq(target_table, project_id=project_id, if_exists='replace',
-          location=job_location, progress_bar=True, credentials=credential)
+#pandas dataframe parameter
+def insert(df, table):
+    """
+    :param df: Name of Pandas dataframe
+    :param table: Name of BigQuery dataset and table, i.e. final_bike
+    :return: BigQuery job object
+    """
+
+    client = bigquery.Client()
+
+    return client.load_table_from_dataframe(df, table)
+
+job = insert(clean_bike_to_bq, 'acoustic-portal-322707.bike_dataset.final_bike_df')
