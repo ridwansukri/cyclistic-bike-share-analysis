@@ -1,3 +1,9 @@
+# Create a copy of dataframe
+clean_bike_to_bq = clean_bike.copy()
+
+# Bigquery doesn't recognize category types, change several columns to string
+clean_bike_to_bq = convert_to_string(clean_bike_to_bq, ['bike_type', 'customer_type'])
+
 # Set environment variables
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/aspir/Desktop/Divvy/acoustic-portal-322707-496a5c838490.json'
 
